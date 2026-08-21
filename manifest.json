@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Papago Sidebar",
   "description": "Papago (papago.naver.com) sidebar panel for Firefox",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "browser_specific_settings": {
     "gecko": {
       "id": "papago-sidebar@sushistack.github.io",
