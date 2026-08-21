@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Sign with AMO and publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install web-ext
+        run: npm install --global web-ext
+
+      - name: Verify manifest version matches tag
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          manifest=$(jq -r .version manifest.json)
+          if [ "$tag" != "$manifest" ]; then
+            echo "::error::Tag ($tag) != manifest.json version ($manifest). 태그 전에 manifest.json 버전을 먼저 올려주세요." >&2
+            exit 1
+          fi
+
+      - name: Sign with AMO (unlisted)
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.WEB_EXT_API_KEY }}
+          WEB_EXT_API_SECRET: ${{ secrets.WEB_EXT_API_SECRET }}
+        run: |
+          web-ext sign \
+            --source-dir=. \
+            --artifacts-dir=./web-ext-artifacts \
+            --channel=unlisted \
+            --api-key="$WEB_EXT_API_KEY" \
+            --api-secret="$WEB_EXT_API_SECRET"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            web-ext-artifacts/*.xpi

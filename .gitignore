@@ -1,0 +1,9 @@
+# bmad
+_bmad
+.agents
+.claude
+
+# web-ext build output
+web-ext-artifacts/
+node_modules/
+*.xpi
